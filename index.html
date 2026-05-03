@@ -21,73 +21,26 @@
   <script type="text/babel">
     const { useState, useRef, useEffect, useCallback } = React;
 
-    // Replaced Lucide icons with standard SVGs for local HTML compatibility
-    const ArrowLeftRight = ({ className }) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
-    );
-    const Camera = ({ className }) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-    );
-    const Sparkles = ({ className }) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-    );
-
-    const ImageComparisonSlider = ({ beforeSrc, afterSrc }) => {
-      const [sliderPosition, setSliderPosition] = useState(50);
-      const [isDragging, setIsDragging] = useState(false);
-      const sliderRef = useRef(null);
-
-      const handleMove = useCallback((clientX) => {
-        if (!sliderRef.current) return;
-        const rect = sliderRef.current.getBoundingClientRect();
-        const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-        const percent = (x / rect.width) * 100;
-        setSliderPosition(percent);
-      }, []);
-
-      const onMouseMove = useCallback((e) => {
-        if (!isDragging) return;
-        handleMove(e.clientX);
-      }, [isDragging, handleMove]);
-
-      const onTouchMove = useCallback((e) => {
-        if (!isDragging) return;
-        handleMove(e.touches[0].clientX);
-      }, [isDragging, handleMove]);
-
-      useEffect(() => {
-        const handleMouseUp = () => setIsDragging(false);
-        
-        if (isDragging) {
-          window.addEventListener('mousemove', onMouseMove);
-          window.addEventListener('mouseup', handleMouseUp);
-          window.addEventListener('touchmove', onTouchMove, { passive: false });
-          window.addEventListener('touchend', handleMouseUp);
-        }
-
-        return () => {
-          window.removeEventListener('mousemove', onMouseMove);
-          window.removeEventListener('mouseup', handleMouseUp);
-          window.removeEventListener('touchmove', onTouchMove);
-          window.removeEventListener('touchend', handleMouseUp);
-        };
-      }, [isDragging, onMouseMove, onTouchMove]);
-
+    const StaticImageComparison = ({ beforeSrc, afterSrc }) => {
       return (
-        <div 
-          className="relative w-full aspect-square md:aspect-[4/3] overflow-hidden rounded-sm shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-ew-resize select-none group"
-          ref={sliderRef}
-          onMouseDown={(e) => {
-            setIsDragging(true);
-            handleMove(e.clientX);
-          }}
-          onTouchStart={(e) => {
-            setIsDragging(true);
-            handleMove(e.touches[0].clientX);
-          }}
-        >
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6 w-full">
+          {/* BEFORE IMAGE (LEFT) */}
+          <div className="flex-1 relative aspect-square md:aspect-[4/3] rounded-sm overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+            <img 
+              src={beforeSrc} 
+              alt="Raw Food Photography" 
+              className="absolute inset-0 w-full h-full object-cover"
+              draggable="false"
+            />
+            <div className="absolute top-4 left-4 z-20">
+              <div className="bg-black/40 backdrop-blur-md text-white/90 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase border border-white/10 shadow-lg">
+                Before
+              </div>
+            </div>
+          </div>
+
           {/* AFTER IMAGE (RIGHT) */}
-          <div className="absolute inset-0 w-full h-full">
+          <div className="flex-1 relative aspect-square md:aspect-[4/3] rounded-sm overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
             <img 
               src={afterSrc} 
               alt="Enhanced Food Photography" 
@@ -96,51 +49,10 @@
             />
             {/* Subtle Vignette overlay for the enhanced image */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.4)_120%)] pointer-events-none"></div>
-          </div>
-
-          {/* BEFORE IMAGE (LEFT) */}
-          <div 
-            className="absolute inset-0 w-full h-full bg-zinc-900 overflow-hidden"
-            style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
-          >
-            <img 
-              src={beforeSrc} 
-              alt="Raw Food Photography" 
-              className="absolute inset-0 w-full h-full object-cover"
-              draggable="false"
-            />
-          </div>
-
-          {/* Slider Divider Line */}
-          <div 
-            className="absolute top-0 bottom-0 w-[2px] bg-white/90 shadow-[0_0_10px_rgba(0,0,0,0.8)] z-10 transition-transform duration-75"
-            style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
-          >
-            {/* Slider Handle */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-[0_4px_10px_rgba(0,0,0,0.3)] flex items-center justify-center transition-transform hover:scale-110 active:scale-95">
-              <ArrowLeftRight className="w-4 h-4 text-zinc-900" />
-            </div>
-          </div>
-
-          {/* Labels */}
-          <div className="absolute top-6 left-6 z-20">
-            <div className="bg-black/40 backdrop-blur-md text-white/90 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase border border-white/10 shadow-lg flex items-center gap-2">
-              <Camera className="w-3 h-3 opacity-70" />
-              Before
-            </div>
-          </div>
-
-          <div className="absolute top-6 right-6 z-20">
-            <div className="bg-black/40 backdrop-blur-md text-white/90 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase border border-white/10 shadow-lg flex items-center gap-2">
-              <Sparkles className="w-3 h-3 opacity-70 text-amber-200" />
-              After
-            </div>
-          </div>
-          
-          {/* Interaction Hint (Fades out on hover) */}
-          <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 transition-opacity duration-500 ${isDragging ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}>
-            <div className="bg-black/50 backdrop-blur-md text-white/70 px-4 py-2 rounded-full text-xs font-light tracking-wide flex items-center gap-2 shadow-xl">
-              Drag to compare
+            <div className="absolute top-4 right-4 z-20">
+              <div className="bg-black/40 backdrop-blur-md text-white/90 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase border border-white/10 shadow-lg">
+                After
+              </div>
             </div>
           </div>
         </div>
@@ -205,22 +117,22 @@
               </h1>
               <p className="text-zinc-400 text-lg md:text-xl font-light leading-relaxed max-w-2xl mx-auto">
                 Transforming flat, natural-light captures into breathtaking culinary masterpieces. Notice the restoration of deep cinematic contrast, crisp surface textures, and glossy moisture retention.
-              </p>
-            </div>
+          </p>
+        </div>
 
-            {/* Portfolio Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-              {portfolioData.map((item, index) => (
-                <ImageComparisonSlider 
-                  key={index} 
-                  beforeSrc={item.before} 
-                  afterSrc={item.after} 
-                />
-              ))}
-            </div>
+        {/* Portfolio Gallery */}
+        <div className="flex flex-col gap-12 md:gap-24 mb-16">
+          {portfolioData.map((item, index) => (
+            <StaticImageComparison 
+              key={index} 
+              beforeSrc={item.before} 
+              afterSrc={item.after} 
+            />
+          ))}
+        </div>
 
-            <div className="text-center">
-              <p className="text-zinc-500 text-sm font-light tracking-wide flex items-center justify-center gap-2">
+        <div className="text-center">
+          <p className="text-zinc-500 text-sm font-light tracking-wide flex items-center justify-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
                 Professional Food Photography Enhancement
                 <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
